@@ -3,19 +3,16 @@ import random
 import string
 from helpers.api_urls import CREATE_COURIER, LOGIN_COURIER, DELETE_COURIER
 
-def generate_random_string(length=8):
-    """Создаёт случайную строку из букв и цифр."""
-    letters = string.ascii_lowercase + string.digits
-    return ''.join(random.choice(letters) for _ in range(length))
 
-def register_new_courier_and_return_login_password():
-    """
-    Регистрирует нового курьера и возвращает [login, password, firstName].
-    Если регистрация не удалась — возвращает пустой список.
-    """
+def generate_random_string(length=8):
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+
+
+def register_courier():
+    """Создаёт нового курьера и возвращает его данные"""
     login = f"user_{generate_random_string()}"
     password = f"pass_{generate_random_string()}"
-    first_name = f"name_{generate_random_string(5)}"
+    first_name = f"Name_{generate_random_string()}"
 
     payload = {
         "login": login,
@@ -23,32 +20,26 @@ def register_new_courier_and_return_login_password():
         "firstName": first_name
     }
 
-    response = requests.post(CREATE_COURIER, json=payload)
+    r = requests.post(CREATE_COURIER, json=payload)
+    r.raise_for_status()
 
-    # возвращаем данные при успешной регистрации (201)
-    if response.status_code == 201:
-        return [login, password, first_name]
+    # Получаем id для удаления
+    courier_id = get_courier_id(login, password)
 
-    # иначе печатаем (чтобы в логах было видно) и возвращаем пустой список
-    print(f"Register courier failed: {response.status_code} | {response.text}")
-    return []
+    return {
+        "id": courier_id,
+        "login": login,
+        "password": password
+    }
 
-def login_and_get_id(login, password):
-    """
-    Авторизация курьера — возвращает id (int) при успехе, иначе None.
-    """
-    payload = {"login": login, "password": password}
-    response = requests.post(LOGIN_COURIER, json=payload)
-    if response.status_code == 200:
-        try:
-            return response.json().get("id")
-        except ValueError:
-            return None
+
+def get_courier_id(login, password):
+    r = requests.post(LOGIN_COURIER, json={"login": login, "password": password})
+    if r.status_code == 200 and "id" in r.json():
+        return r.json()["id"]
     return None
 
-def delete_courier_by_id(courier_id):
-    """
-    Удаляет курьера по id. Возвращает True если удаление успешно (200), иначе False.
-    """
-    response = requests.delete(f"{DELETE_COURIER}/{courier_id}")
-    return response.status_code == 200
+
+def delete_courier(courier_id):
+    if courier_id:
+        requests.delete(f"{DELETE_COURIER}/{courier_id}")
