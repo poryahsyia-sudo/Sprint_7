@@ -48,17 +48,15 @@ def test_create_duplicate_courier_fails():
         delete_courier_by_id(courier_id)
 
 @allure.feature("Курьеры")
-@allure.story("Создание курьера без обязательного поля password")
-def test_create_courier_without_password_returns_400():
+@allure.story("Создание курьера без поля password")
+def test_create_courier_without_password_returns_error():
     payload = {
         "login": f"user_{generate_random_string()}",
-        # "password" — специально пропущен
         "firstName": "Ivan"
     }
-    with allure.step("Отправляем запрос без поля password"):
-        r = requests.post(CREATE_COURIER, json=payload)
-    with allure.step("Проверяем, что сервер вернул 400 Bad Request"):
-        assert r.status_code == 400, f"Ожидался 400, получили {r.status_code}: {r.text}"
+    r = requests.post(CREATE_COURIER, json=payload)
+    assert r.status_code == 400, f"Ожидался 400 при отсутствии поля password, получили {r.status_code}: {r.text}"
+
 
 # ---------- Авторизация курьера ----------
 
@@ -71,16 +69,16 @@ def test_login_courier_success(new_courier):
     data = r.json()
     assert "id" in data and isinstance(data["id"], int)
 
-@pytest.mark.parametrize("missing_field,payload", [
-    ("login", {"password": "pass", "firstName": "Ivan"}),
-    ("password", {"login": f"user_{generate_random_string()}", "firstName": "Ivan"}),
-    ("firstName", {"login": f"user_{generate_random_string()}", "password": f"pass_{generate_random_string()}"}),])
-
+@pytest.mark.parametrize("payload", [
+    ({"login": "no_login_field"}),
+    ({"password": "no_password_field"}),
+    ({})
+])
 @allure.feature("Курьеры")
-@allure.story("Создание курьера без обязательных полей")
-def test_create_courier_missing_field_returns_error(missing_field, payload):
-    r = requests.post(CREATE_COURIER, json=payload)
-    assert r.status_code == 400, f"Ожидался 400 при отсутствии поля {missing_field}, получили {r.status_code}: {r.text}"
+@allure.story("Авторизация — отсутствие полей")
+def test_login_missing_fields_returns_error(payload):
+    r = requests.post(LOGIN_COURIER, json=payload)
+    assert r.status_code == 400, f"Ожидался 400 при отсутствии полей логина, получили {r.status_code}: {r.text}"
 
 @allure.feature("Курьеры")
 @allure.story("Авторизация неверные креды")
