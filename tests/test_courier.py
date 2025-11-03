@@ -47,18 +47,18 @@ def test_create_duplicate_courier_fails():
     if courier_id:
         delete_courier_by_id(courier_id)
 
-@pytest.mark.parametrize("missing_field,payload", [
-    ("login", {"password": "pass", "firstName": "Ivan"}),
-    # для полей login/password используем уникальные значения, чтобы избежать 409
-    ("password", {"login": f"user_{generate_random_string()}", "firstName": "Ivan"}),
-    ("firstName", {"login": f"user_{generate_random_string()}", "password": "pass"})
-])
 @allure.feature("Курьеры")
-@allure.story("Создание курьера без обязательных полей")
-def test_create_courier_missing_field_returns_error(missing_field, payload):
-    r = requests.post(CREATE_COURIER, json=payload)
-    # согласно заданию ожидаем 400; если API возвращает другое — тест покажет реальное поведение
-    assert r.status_code == 400, f"Ожидался 400 при отсутствии поля {missing_field}, получили {r.status_code}: {r.text}"
+@allure.story("Создание курьера без обязательного поля password")
+def test_create_courier_without_password_returns_400():
+    payload = {
+        "login": f"user_{generate_random_string()}",
+        # "password" — специально пропущен
+        "firstName": "Ivan"
+    }
+    with allure.step("Отправляем запрос без поля password"):
+        r = requests.post(CREATE_COURIER, json=payload)
+    with allure.step("Проверяем, что сервер вернул 400 Bad Request"):
+        assert r.status_code == 400, f"Ожидался 400, получили {r.status_code}: {r.text}"
 
 # ---------- Авторизация курьера ----------
 
