@@ -40,7 +40,7 @@ def test_create_duplicate_courier_fails():
     payload = {"login": creds[0], "password": creds[1], "firstName": creds[2]}
     r2 = requests.post(CREATE_COURIER, json=payload)
     # ожидаем ошибку дублирования (обычно 400 или 409) — тест проверяет поведение API
-    assert r2.status_code in (400, 409), f"Ожидался 400/409 при дублировании, получили {r2.status_code}: {r2.text}"
+    assert r2.status_code in (409), f"Ожидался 400/409 при дублировании, получили {r2.status_code}: {r2.text}"
 
     # удаляем созданного курьера (если можно)
     courier_id = login_and_get_id(creds[0], creds[1])
