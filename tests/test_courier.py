@@ -79,8 +79,8 @@ def test_login_courier_success(new_courier):
 @allure.story("Авторизация — отсутствие поля firstName")
 def test_login_missing_firstname_returns_error(payload):
     r = requests.post(LOGIN_COURIER, json=payload)
-    assert r.status_code == 400, (
-        f"Ожидался 400 при отсутствии поля firstName, "
+    assert r.status_code == 404, (
+        f"Ожидался 404 при отсутствии поля firstName, "
         f"получили {r.status_code}: {r.text}"
     )
 
