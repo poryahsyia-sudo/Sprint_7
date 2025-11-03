@@ -70,15 +70,19 @@ def test_login_courier_success(new_courier):
     assert "id" in data and isinstance(data["id"], int)
 
 @pytest.mark.parametrize("payload", [
-    ({"login": "no_login_field"}),
-    ({"password": "no_password_field"}),
+    # отсутствует firstName
+    ({"login": f"user_{generate_random_string()}", "password": f"pass_{generate_random_string()}"}),
+    # полностью пустое тело
     ({})
 ])
 @allure.feature("Курьеры")
-@allure.story("Авторизация — отсутствие полей")
-def test_login_missing_fields_returns_error(payload):
+@allure.story("Авторизация — отсутствие поля firstName")
+def test_login_missing_firstname_returns_error(payload):
     r = requests.post(LOGIN_COURIER, json=payload)
-    assert r.status_code == 400, f"Ожидался 400 при отсутствии полей логина, получили {r.status_code}: {r.text}"
+    assert r.status_code == 400, (
+        f"Ожидался 400 при отсутствии поля firstName, "
+        f"получили {r.status_code}: {r.text}"
+    )
 
 @allure.feature("Курьеры")
 @allure.story("Авторизация неверные креды")
